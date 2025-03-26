@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bubble Shooter</title>
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+        background-color: #222;
+        text-align: center;
+      }
+
+      canvas {
+        display: block;
+        background: linear-gradient(to bottom, #1e3c72, #2a5298);
+      }
+
+      #gameContainer {
+        position: relative;
+        width: 100vw;
+        height: 100vh;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="gameContainer">
+      <canvas id="gameCanvas"></canvas>
+    </div>
+
+    <script>
+      const canvas = document.getElementById("gameCanvas");
+      const ctx = canvas.getContext("2d");
+
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      const shooter = {
+        x: canvas.width / 2,
+        y: canvas.height - 50,
+        width: 50,
+        height: 20,
+        color: "white",
+        speed: 10,
+      };
+
+      let bullets = [];
+      let balls = [];
+
+      function drawShooter() {
+        ctx.fillStyle = shooter.color;
+        ctx.fillRect(shooter.x, shooter.y, shooter.width, shooter.height);
+      }
+
+      function drawBullets() {
+        ctx.fillStyle = "yellow";
+        bullets.forEach((bullet, index) => {
+          ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
+          bullet.y -= bullet.speed;
+          if (bullet.y < 0) bullets.splice(index, 1);
+        });
+      }
+
+      function drawBalls() {
+        ctx.fillStyle = "red";
+        balls.forEach((ball, index) => {
+          ctx.beginPath();
+          ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+          ctx.fill();
+          ball.y += ball.speed;
+
+          if (ball.y > canvas.height) {
+            balls.splice(index, 1);
+          }
+        });
+      }
+
+      function spawnBall() {
+        balls.push({
+          x: Math.random() * canvas.width,
+          y: 0,
+          radius: 15,
+          speed: 2 + Math.random() * 2,
+        });
+      }
+
+      function moveShooter(event) {
+        if (event.key === "ArrowLeft" && shooter.x > 0) {
+          shooter.x -= shooter.speed;
+        } else if (
+          event.key === "ArrowRight" &&
+          shooter.x + shooter.width < canvas.width
+        ) {
+          shooter.x += shooter.speed;
+        }
+      }
+
+      function shootBullet(event) {
+        if (event.key === " ") {
+          bullets.push({
+            x: shooter.x + shooter.width / 2 - 2.5,
+            y: shooter.y,
+            width: 5,
+            height: 10,
+            speed: 5,
+          });
+        }
+      }
+
+      function detectCollisions() {
+        bullets.forEach((bullet, bIndex) => {
+          balls.forEach((ball, ballIndex) => {
+            let dx = bullet.x - ball.x;
+            let dy = bullet.y - ball.y;
+            let distance = Math.sqrt(dx * dx + dy * dy);
+
+            if (distance < ball.radius) {
+              bullets.splice(bIndex, 1);
+              balls.splice(ballIndex, 1);
+            }
+          });
+        });
+      }
+
+      function gameLoop() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawShooter();
+        drawBullets();
+        drawBalls();
+        detectCollisions();
+        requestAnimationFrame(gameLoop);
+      }
+
+      setInterval(spawnBall, 2000);
+      gameLoop();
+
+      document.addEventListener("keydown", moveShooter);
+      document.addEventListener("keydown", shootBullet);
+    </script>
+  </body>
+</html>
